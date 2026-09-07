@@ -1,0 +1,7 @@
+{
+  "zen": "Non-blocking is better than blocking.",
+  "hook_id": 500000001,
+  "hook": { "type": "Repository", "events": ["issues", "issue_comment"] },
+  "repository": { "full_name": "test-owner/test-repo" },
+  "sender": { "login": "test-owner" }
+}

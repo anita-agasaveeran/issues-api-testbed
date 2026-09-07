@@ -1,0 +1,60 @@
+# Authored with Claude Code (Anthropic) under the direction of Anita Agasaveeran,
+# who specified the requirements and design and reviewed the implementation.
+# See the "Credits and authorship" section of README.md.
+# Local stack: the service behind a Caddy reverse proxy.
+#
+#   docker compose up --build          # service only, on :8000
+#   docker compose --profile proxy up  # service behind Caddy on :8080
+#
+# Secrets come from .env, which is git-ignored and excluded from the build
+# context. Nothing here hard-codes a credential.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: issues-api-testbed:local
+    container_name: issues-api
+    env_file:
+      - .env
+    environment:
+      # Overrides .env so the container writes to the mounted volume, not the
+      # relative path a host run would use.
+      DATABASE_URL: sqlite:////data/events.db
+      PORT: "8000"
+    ports:
+      - "${HOST_PORT:-8000}:8000"
+    volumes:
+      - events:/data
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).status == 200 else 1)"
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+  # Optional: a reverse proxy in front of the service, closer to how a webhook
+  # receiver is deployed in practice. Enable with `--profile proxy`.
+  proxy:
+    image: caddy:2-alpine
+    container_name: issues-api-proxy
+    profiles: [proxy]
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "${PROXY_PORT:-8080}:80"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    restart: unless-stopped
+
+volumes:
+  events:
+  caddy_data:

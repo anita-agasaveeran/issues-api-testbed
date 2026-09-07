@@ -1,0 +1,60 @@
+# ---- Secrets: never commit ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# ---- Local webhook event store ----
+*.db
+*.sqlite
+*.sqlite3
+events.db*
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+pip-wheel-metadata/
+
+# ---- Virtualenvs ----
+.venv/
+venv/
+env/
+ENV/
+
+# ---- Testing / coverage ----
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+
+# ---- Type checking / linting caches ----
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+
+# ---- Editors / OS ----
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# ---- Tunnels / logs ----
+*.log
+cloudflared.log
+
+# ---- Submission artifacts built locally ----
+# The Word walkthrough and its screenshots are submitted separately, not versioned.
+docs/*.docx
+docs/screenshots/

@@ -1,0 +1,25 @@
+# Authored with Claude Code (Anthropic) under the direction of Anita Agasaveeran,
+# who specified the requirements and design and reviewed the implementation.
+# See the "Credits and authorship" section of README.md.
+# Minimal reverse proxy for local use.
+#
+# The webhook route must receive the request body byte-for-byte: HMAC is computed
+# over the raw bytes, so any proxy that rewrites or re-encodes the body would
+# break signature verification. Caddy passes it through unmodified.
+
+:80 {
+	encode gzip
+
+	# Forward the client's request id so logs correlate across the proxy hop.
+	header_up X-Request-ID {http.request.header.X-Request-ID}
+
+	reverse_proxy api:8000 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
