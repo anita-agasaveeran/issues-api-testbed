@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-# Authored with Claude Code (Anthropic) under the direction of Anita Agasaveeran,
-# who specified the requirements and design and reviewed the implementation.
+# Authored with Claude Code (Anthropic) under the direction of Anita Agasaveeran
+# and Ameya Mathew, who specified the requirements and design and reviewed the
+# implementation.
 # See the "Credits and authorship" section of README.md.
 """Replay one signed delivery N times to demonstrate idempotent processing.
 

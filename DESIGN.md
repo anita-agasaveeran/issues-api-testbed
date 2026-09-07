@@ -1,8 +1,8 @@
 # Design note
 
 > **Authorship.** Written with Claude Code (Anthropic) under the direction of
-> Anita Agasaveeran, who specified the design decisions recorded here. See the
-> Credits section of README.md for the full disclosure.
+> Anita Agasaveeran and Ameya Mathew, who specified the design decisions recorded
+> here. See the Credits section of README.md for the full disclosure.
 
 Four decisions shaped this service: how upstream failures are translated, how
 pagination is preserved, how webhook deliveries are made idempotent, and which

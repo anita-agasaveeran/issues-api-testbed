@@ -438,14 +438,14 @@ provoking a real rate limit.
 
 ## Credits and authorship
 
-**Author of record:** Anita Agasaveeran (anita.agasaveeran@sjsu.edu)
+**Authors:** Anita Agasaveeran (anita.agasaveeran@sjsu.edu) and Ameya Mathew
 
 **AI assistance disclosure.** The implementation in `app/`, the test suite in
 `tests/`, the OpenAPI contract in `openapi.yaml`, and the supporting build and
 deployment files were written with **Claude Code (Anthropic, Claude Opus 5)** under
-my direction. I specified the requirements, chose the architecture and the
+our direction. We specified the requirements, chose the architecture and the
 step-by-step build order, reviewed the generated code, ran and validated the tests,
-performed the live GitHub and webhook verification, and am responsible for the
+performed the live GitHub and webhook verification, and are responsible for the
 submitted work. Every source file carries a header stating this.
 
 **Templates used:** none. The project was scaffolded from an empty repository — no
