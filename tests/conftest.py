@@ -13,6 +13,7 @@ transport, and integration tests override them with real credentials.
 from __future__ import annotations
 
 import os
+import pathlib as _pathlib
 
 #: Sentinel values, so integration tests can tell "no credentials configured" apart
 #: from real ones. Never sent to GitHub.
@@ -23,12 +24,41 @@ PLACEHOLDERS = {
     "WEBHOOK_SECRET": "env-placeholder-secret",
 }
 
+_ENV_FILE = _pathlib.Path(__file__).resolve().parents[1] / ".env"
+
+
+def _load_dotenv() -> None:
+    """Copy .env into the process environment before placeholders are seeded.
+
+    pydantic-settings reads .env directly, which means a real credential can be
+    visible to the application while ``os.environ`` still shows nothing. Loading
+    the file here keeps one source of truth: whatever configures the app also
+    decides whether the integration tests can run. Without this the credential
+    check below never sees real values and the whole integration suite silently
+    skips — which looks indistinguishable from passing.
+    """
+    if not _ENV_FILE.exists():
+        return
+    for line in _ENV_FILE.read_text().splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        name, separator, value = stripped.partition("=")
+        if not separator:
+            continue
+        cleaned = value.strip().strip("\"'")
+        if cleaned:
+            os.environ.setdefault(name.strip(), cleaned)
+
+
+_load_dotenv()
+
 for _name, _value in PLACEHOLDERS.items():
     os.environ.setdefault(_name, _value)
 
 
 def has_real_credentials() -> bool:
-    """True when the environment carries real GitHub credentials, not placeholders."""
+    """True when real GitHub credentials are configured, not placeholders."""
     return all(os.environ.get(name, value) != value for name, value in PLACEHOLDERS.items())
 
 

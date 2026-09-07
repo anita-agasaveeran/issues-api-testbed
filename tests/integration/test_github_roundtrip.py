@@ -9,9 +9,15 @@ request validation, the GitHub client, error mapping, and response projection.
 
 from __future__ import annotations
 
+import time
+
+import pytest
 from fastapi.testclient import TestClient
 
 from tests.integration.conftest import RUN_MARKER
+
+#: GitHub indexes a new label asynchronously; this is generous headroom.
+LABEL_INDEX_TIMEOUT_SECONDS = 30.0
 
 
 def test_create_then_fetch_the_issue(
@@ -92,13 +98,49 @@ def test_labels_survive_the_round_trip(
         "/issues", json={"title": unique_title, "body": RUN_MARKER, "labels": ["bug"]}
     )
     assert created.status_code == 201, created.text
-    created_issues.append(created.json()["number"])
+    number = created.json()["number"]
+    created_issues.append(number)
 
     assert created.json()["labels"] == ["bug"]
 
-    filtered = api.get("/issues", params={"labels": "bug", "state": "open", "per_page": 100})
-    assert filtered.status_code == 200
-    assert created.json()["number"] in [issue["number"] for issue in filtered.json()]
+    # Reading the issue back is immediately consistent, unlike the label filter.
+    fetched = api.get(f"/issues/{number}")
+    assert fetched.status_code == 200
+    assert fetched.json()["labels"] == ["bug"]
+
+
+def test_filtering_by_label_returns_the_labelled_issue(
+    api: TestClient, unique_title: str, created_issues: list[int]
+) -> None:
+    """GitHub's label index is eventually consistent, so this polls rather than
+    asserting immediately after creation — the filter is correct, it is just not
+    instantaneous."""
+    created = api.post(
+        "/issues", json={"title": unique_title, "body": RUN_MARKER, "labels": ["bug"]}
+    )
+    assert created.status_code == 201, created.text
+    number = created.json()["number"]
+    created_issues.append(number)
+
+    deadline = time.monotonic() + LABEL_INDEX_TIMEOUT_SECONDS
+    seen: list[int] = []
+    while time.monotonic() < deadline:
+        # A fresh per_page avoids the response cache returning an earlier page.
+        filtered = api.get(
+            "/issues",
+            params={"labels": "bug", "state": "open", "per_page": 100},
+            headers={"Cache-Control": "no-cache"},
+        )
+        assert filtered.status_code == 200
+        seen = [issue["number"] for issue in filtered.json()]
+        if number in seen:
+            return
+        time.sleep(1.0)
+
+    pytest.fail(
+        f"issue #{number} never appeared in the label-filtered list within "
+        f"{LABEL_INDEX_TIMEOUT_SECONDS:.0f}s; last saw {seen}"
+    )
 
 
 def test_listing_honours_state_and_pagination(
