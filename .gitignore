@@ -58,3 +58,7 @@ cloudflared.log
 # The Word walkthrough and its screenshots are submitted separately, not versioned.
 docs/*.docx
 docs/screenshots/
+
+# Scripts that only exist to build that document, kept locally.
+scripts/capture_ui_screenshots.py
+scripts/build_walkthrough_doc.py
